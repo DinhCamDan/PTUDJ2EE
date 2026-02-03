@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Book Management</title>
+    <style>
+        body {
+            font-family: monospace;
+        }
+        .box {
+            border: 3px solid black;
+            padding: 20px;
+            width: 420px;
+            white-space: pre;
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            margin: 2px;
+        }
+        input {
+            width: 95%;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>📚 Book Management</h2>
+
+<!-- Form thêm / sửa -->
+<h3>➕ Thêm / ✏️ Sửa sách</h3>
+<input type="number" id="id" placeholder="ID">
+<input type="text" id="title" placeholder="Title">
+<input type="text" id="author" placeholder="Author">
+<br>
+<button onclick="addBook()">Thêm</button>
+<button onclick="updateBook()">Sửa</button>
+
+<script>
+    function loadBooks() {
+        fetch("/api/books")
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("output").textContent =
+                    JSON.stringify(data, null, 4);
+            });
+    }
+
+    function addBook() {
+        const book = {
+            id: document.getElementById("id").value,
+            title: document.getElementById("title").value,
+            author: document.getElementById("author").value
+        };
+
+        fetch("/api/books", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(book)
+        }).then(() => loadBooks());
+    }
+
+    function updateBook() {
+        const book = {
+            id: document.getElementById("id").value,
+            title: document.getElementById("title").value,
+            author: document.getElementById("author").value
+        };
+
+        fetch("/api/books/" + book.id, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(book)
+        }).then(() => loadBooks());
+    }
+
+    function deleteBook(id) {
+        fetch("/api/books/" + id, {
+            method: "DELETE"
+        }).then(() => loadBooks());
+    }
+
+    loadBooks();
+</script>
+
+</body>
+</html>
