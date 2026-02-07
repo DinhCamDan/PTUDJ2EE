@@ -1,88 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Book Management</title>
-    <style>
-        body {
-            font-family: monospace;
-        }
-        .box {
-            border: 3px solid black;
-            padding: 20px;
-            width: 420px;
-            white-space: pre;
-            font-size: 15px;
-            margin-bottom: 20px;
-        }
-        button {
-            margin: 2px;
-        }
-        input {
-            width: 95%;
-            margin-bottom: 5px;
-        }
-    </style>
+    <title>Trang Web Demo</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>📚 Book Management</h2>
+<!-- MENU -->
+<header>
+    <nav class="navbar">
+        <div class="logo">MyWebsite</div>
+        <ul class="menu">
+            <li><a href="#">Trang chủ</a></li>
+            <li><a href="#">Sản phẩm</a></li>
+            <li><a href="#">Giới thiệu</a></li>
+            <li><a href="#">Liên hệ</a></li>
+        </ul>
+    </nav>
+</header>
 
-<!-- Form thêm / sửa -->
-<h3>➕ Thêm / ✏️ Sửa sách</h3>
-<input type="number" id="id" placeholder="ID">
-<input type="text" id="title" placeholder="Title">
-<input type="text" id="author" placeholder="Author">
-<br>
-<button onclick="addBook()">Thêm</button>
-<button onclick="updateBook()">Sửa</button>
+<!-- NỘI DUNG -->
+<main>
+    <h1>Chào mừng bạn đến với website</h1>
+    <p>Đây là nội dung chính của trang.</p>
+</main>
 
-<script>
-    function loadBooks() {
-        fetch("/api/books")
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById("output").textContent =
-                    JSON.stringify(data, null, 4);
-            });
-    }
+<footer>
 
-    function addBook() {
-        const book = {
-            id: document.getElementById("id").value,
-            title: document.getElementById("title").value,
-            author: document.getElementById("author").value
-        };
-
-        fetch("/api/books", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(book)
-        }).then(() => loadBooks());
-    }
-
-    function updateBook() {
-        const book = {
-            id: document.getElementById("id").value,
-            title: document.getElementById("title").value,
-            author: document.getElementById("author").value
-        };
-
-        fetch("/api/books/" + book.id, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(book)
-        }).then(() => loadBooks());
-    }
-
-    function deleteBook(id) {
-        fetch("/api/books/" + id, {
-            method: "DELETE"
-        }).then(() => loadBooks());
-    }
-
-    loadBooks();
-</script>
+</footer>
 
 </body>
 </html>
