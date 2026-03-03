@@ -1,66 +1,71 @@
 package com.example.demo.service;
-import com.example.demo.model.Category;
+
 import com.example.demo.model.Product;
-import jakarta.annotation.PostConstruct;
+import com.example.demo.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class ProductService {
-    List<Product> listProduct = new ArrayList<>();
-    @PostConstruct
-    public void initSampleData() {
-        Category novel = new Category(1, "Tiểu thuyết");
-        Category tech = new Category(2, "Công nghệ");
-        listProduct.add(new Product(3, "Dế Mèn Phiêu Lưu Ký", "demen.png", 50000, novel)); }
+
+    @Autowired
+    private ProductRepository productRepository;
+
     public List<Product> getAll() {
-        return listProduct;
+        return productRepository.findAll();
     }
 
-    public Product get(int id) {
-        return listProduct.stream().filter(p -> p.getId() == id).findFirst().orElse(null);
+    public Product get(Long id) {
+        return productRepository.findById(id).orElse(null);
     }
 
-    public void add(Product newProduct) {
-        int maxId = listProduct.stream().mapToInt(Product::getId).max().orElse(0);
-        newProduct.setId(maxId + 1);
-        listProduct.add(newProduct);
+    public void add(Product product) {
+        productRepository.save(product);
     }
 
-    public void update(Product editProduct) {
-        Product find = get(editProduct.getId());
-        if(find != null) {
-            find.setPrice(editProduct.getPrice());
-            find.setName(editProduct.getName());
-            if(editProduct.getImage() != null)
-                find.setImage(editProduct.getImage());
-        }
+    public void update(Product product) {
+        productRepository.save(product);
     }
 
-    public void updateImage(Product newProduct, MultipartFile imageProduct) {
-        String contentType = imageProduct.getContentType();
-        if (contentType != null && !contentType.startsWith("image")) {
-            throw new IllegalArgumentException("Tệp tải lên không phải là hình ảnh!");
-        }
-        if (!imageProduct.isEmpty()) {
+    public void delete(Long id) {
+        productRepository.deleteById(id);
+    }
+
+    // Giữ lại phần upload ảnh
+    public void updateImage(Product product, MultipartFile imageProduct) {
+
+        if (imageProduct != null && !imageProduct.isEmpty()) {
             try {
-                Path dirImages = Paths.get("static/images");
-                if (!Files.exists(dirImages)) {
-                    Files.createDirectories(dirImages);
+
+                String uploadDir = System.getProperty("user.dir")
+                        + "/src/main/resources/static/images/";
+
+                Path uploadPath = Paths.get(uploadDir);
+
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
                 }
-                String newFileName = UUID.randomUUID() + "_" + imageProduct.getOriginalFilename();
-                Path pathFileUpload = dirImages.resolve(newFileName);
-                Files.copy(imageProduct.getInputStream(), pathFileUpload, StandardCopyOption.REPLACE_EXISTING);
-                newProduct.setImage(newFileName);
+
+                String fileName = UUID.randomUUID() + "_"
+                        + imageProduct.getOriginalFilename();
+
+                Path filePath = uploadPath.resolve(fileName);
+
+                Files.copy(imageProduct.getInputStream(),
+                        filePath,
+                        StandardCopyOption.REPLACE_EXISTING);
+
+                product.setImage(fileName);
+
             } catch (IOException e) {
-                e.printStackTrace(); // Handle the exception appropriately
+                e.printStackTrace();
             }
         }
     }
 }
-

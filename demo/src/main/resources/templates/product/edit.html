@@ -11,47 +11,36 @@
 <div layout:fragment="content" class="container body-content mt-4">
   <h2 class="mb-4">Chỉnh sửa sản phẩm</h2>
   <form th:action="@{/products/edit}" th:object="${product}"
-        method="post" class="form" enctype="multipart/form-data">
+        method="post" enctype="multipart/form-data">
 
-    <!-- ID ẩn để gửi lên -->
     <input type="hidden" th:field="*{id}"/>
 
-    <div class="form-group mb-3">
-      <label for="name">Tên sản phẩm</label>
-      <input class="form-control" type="text" th:field="*{name}" id="name">
-      <div class="alert alert-warning"
-           th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
-    </div>
+    <input type="text" th:field="*{name}" class="form-control mb-2">
 
-    <div class="form-group mb-3">
-      <label for="price">Giá</label>
-      <input class="form-control" type="number" th:field="*{price}" id="price">
-      <div class="alert alert-warning"
-           th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
-    </div>
+    <input type="number" th:field="*{price}" class="form-control mb-2">
 
-    <div class="form-group mb-3">
-      <label for="image">Ảnh hiện tại:</label><br>
-      <img th:src="@{/images/} + ${product.image}" alt="Product Image"
-           style="width:120px;height:100px;">
-    </div>
+    <label>Ảnh hiện tại:</label><br>
+    <img th:src="${product.image != null && product.image.startsWith('http')}
+                 ? ${product.image}
+                 : @{/images/} + ${product.image}"
+         width="120" height="100" class="mb-3">
 
-    <div class="form-group mb-3">
-      <label for="image">Chọn ảnh mới (nếu muốn thay):</label>
-      <input class="form-control" type="file" id="image" name="imageProduct"
-             accept="image/png,image/jpeg">
-    </div>
+    <label>Upload ảnh mới:</label>
+    <input type="file" name="imageProduct" class="form-control mb-2"
+           accept="image/png,image/jpeg">
 
-    <div class="form-group mb-3">
-      <label for="category" class="form-label">Danh mục</label>
-      <select th:field="*{category.id}" class="form-control" id="category">
-        <option th:each="c : ${categories}"
-                th:value="${c.id}" th:text="${c.name}"></option>
-      </select>
-    </div>
+    <label>Hoặc nhập link ảnh mới:</label>
+    <input type="text" name="imageUrl" class="form-control mb-3"
+           placeholder="https://example.com/image.jpg">
 
-    <button type="submit" class="btn btn-success">Cập nhật</button>
-    <a th:href="@{/products}" class="btn btn-secondary">Hủy</a>
+    <select th:field="*{category.id}" class="form-control mb-3">
+      <option th:each="c : ${categories}"
+              th:value="${c.id}"
+              th:text="${c.name}">
+      </option>
+    </select>
+
+    <button type="submit" class="btn btn-success">Update</button>
   </form>
 </div>
 </body>
