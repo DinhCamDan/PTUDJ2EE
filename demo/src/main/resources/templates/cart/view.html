@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{layout.html}">
+
+<body>
+
+<div layout:fragment="content" class="container mt-4">
+
+    <h2>🛒 Giỏ hàng</h2>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Tên</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="item : ${items}">
+            <td th:text="${item.name}"></td>
+            <td th:text="${item.price}"></td>
+
+            <td>
+                <form th:action="@{/cart/update/{id}(id=${item.id})}" method="post">
+                    <input type="number" name="quantity"
+                           th:value="${item.quantity}" min="1" style="width:70px">
+                    <button class="btn btn-sm btn-primary">Update</button>
+                </form>
+            </td>
+
+            <td>
+                <form th:action="@{/cart/remove/{id}(id=${item.id})}" method="post">
+                    <button class="btn btn-danger btn-sm">Xóa</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h4>Tổng tiền: <span th:text="${totalPrice}"></span> VNĐ</h4>
+
+    <a href="/order/checkout" class="btn btn-success">Đặt hàng</a>
+
+    <form action="/cart/clear" method="post" class="mt-2">
+        <button class="btn btn-warning">Xóa tất cả</button>
+    </form>
+
+</div>
+
+</body>
+</html>

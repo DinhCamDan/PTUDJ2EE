@@ -7,6 +7,7 @@ import com.example.demo.service.ProductService;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -24,11 +25,46 @@ public class ProductController {
     private CategoryService categoryService;
 
     // ===============================
-    // DANH SÁCH
+    // DANH SÁCH + SEARCH + FILTER + SORT + PAGINATION
     // ===============================
     @GetMapping
-    public String index(Model model) {
-        model.addAttribute("listproduct", productService.getAll());
+    public String listProducts(
+            @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(defaultValue = "asc") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+
+        // SORT
+        Sort sortOption = sort.equals("desc")
+                ? Sort.by("price").descending()
+                : Sort.by("price").ascending();
+
+        Pageable pageable = PageRequest.of(page, 6, sortOption);
+
+        Page<Product> productPage;
+
+        // ✅ LOGIC CHUẨN (kết hợp filter)
+        if (!keyword.isEmpty() && categoryId != null) {
+            productPage = productService.searchByNameAndCategory(keyword, categoryId, pageable);
+        } else if (!keyword.isEmpty()) {
+            productPage = productService.searchByName(keyword, pageable);
+        } else if (categoryId != null) {
+            productPage = productService.findByCategory(categoryId, pageable);
+        } else {
+            productPage = productService.findAll(pageable);
+        }
+
+        // DATA RA VIEW
+        model.addAttribute("listproduct", productPage.getContent());
+        model.addAttribute("currentPage", productPage.getNumber());
+        model.addAttribute("totalPages", productPage.getTotalPages());
+
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("sort", sort);
+        model.addAttribute("selectedCategory", categoryId);
+        model.addAttribute("categories", categoryService.getAll());
+
         return "product/products";
     }
 
@@ -46,29 +82,29 @@ public class ProductController {
     // CREATE
     // ===============================
     @PostMapping("/create")
-    public String create(@Valid @ModelAttribute("product") Product newProduct,
-                         BindingResult result,
-                         @RequestParam("category.id") Long categoryId,
-                         @RequestParam("imageProduct") MultipartFile imageProduct,
-                         @RequestParam(value = "imageUrl", required = false) String imageUrl,
-                         Model model) {
+    public String create(
+            @Valid @ModelAttribute("product") Product newProduct,
+            BindingResult result,
+            @RequestParam("category.id") Long categoryId,
+            @RequestParam("imageProduct") MultipartFile imageProduct,
+            @RequestParam(value = "imageUrl", required = false) String imageUrl,
+            Model model) {
 
         if (result.hasErrors()) {
             model.addAttribute("categories", categoryService.getAll());
             return "product/create";
         }
 
-        // Ưu tiên upload file
+        // IMAGE UPLOAD
         if (imageProduct != null && !imageProduct.isEmpty()) {
             productService.updateImage(newProduct, imageProduct);
-        }
-        // Nếu không có file nhưng có link
-        else if (imageUrl != null && !imageUrl.isBlank()) {
+        } else if (imageUrl != null && !imageUrl.isBlank()) {
             newProduct.setImage(imageUrl);
         }
 
-        Category selectedCategory = categoryService.get(categoryId);
-        newProduct.setCategory(selectedCategory);
+        // CATEGORY
+        Category category = categoryService.get(categoryId);
+        newProduct.setCategory(category);
 
         productService.add(newProduct);
 
@@ -97,11 +133,12 @@ public class ProductController {
     // EDIT
     // ===============================
     @PostMapping("/edit")
-    public String edit(@Valid @ModelAttribute("product") Product editProduct,
-                       BindingResult result,
-                       @RequestParam("imageProduct") MultipartFile imageProduct,
-                       @RequestParam(value = "imageUrl", required = false) String imageUrl,
-                       Model model) {
+    public String edit(
+            @Valid @ModelAttribute("product") Product editProduct,
+            BindingResult result,
+            @RequestParam("imageProduct") MultipartFile imageProduct,
+            @RequestParam(value = "imageUrl", required = false) String imageUrl,
+            Model model) {
 
         if (result.hasErrors()) {
             model.addAttribute("categories", categoryService.getAll());
@@ -110,16 +147,12 @@ public class ProductController {
 
         Product oldProduct = productService.get(editProduct.getId());
 
-        // Nếu upload file mới
+        // IMAGE UPDATE
         if (imageProduct != null && !imageProduct.isEmpty()) {
             productService.updateImage(editProduct, imageProduct);
-        }
-        // Nếu nhập link mới
-        else if (imageUrl != null && !imageUrl.isBlank()) {
+        } else if (imageUrl != null && !imageUrl.isBlank()) {
             editProduct.setImage(imageUrl);
-        }
-        // Nếu không nhập gì → giữ ảnh cũ
-        else {
+        } else {
             editProduct.setImage(oldProduct.getImage());
         }
 

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout.html}">
+
+<body>
+
+<div layout:fragment="content" class="container mt-4">
+
+    <h2>Lịch sử đơn hàng</h2>
+
+    <form method="get" action="/order/history" class="mb-3">
+        <input type="email" name="email" placeholder="Nhập email" class="form-control w-25 d-inline">
+        <button class="btn btn-primary">Xem</button>
+    </form>
+
+    <div th:each="order : ${orders}" class="card mb-3 p-3">
+        <p><b>Mã:</b> <span th:text="${order.id}"></span></p>
+        <p><b>Ngày:</b> <span th:text="${order.orderDate}"></span></p>
+        <p><b>Tổng tiền:</b> <span th:text="${order.totalPrice}"></span></p>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{layout.html}">
+
+<body>
+
+<div layout:fragment="content" class="container mt-4">
+
+    <h2>Thông tin đặt hàng</h2>
+
+    <form th:action="@{/order/checkout}" method="post">
+
+        <div class="mb-3">
+            <label>Họ tên</label>
+            <input type="text" name="name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Địa chỉ</label>
+            <input type="text" name="address" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-success">Đặt hàng</button>
+    </form>
+
+</div>
+
+</body>
+</html>

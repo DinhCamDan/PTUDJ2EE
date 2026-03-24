@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout.html}">
 
 <head>
@@ -10,32 +11,51 @@
         rel="stylesheet">
 
   <style>
-
-    .product-card{
-        transition:0.3s;
-        border-radius:12px;
+    body{
+      background-color:#f8f9fa;
     }
 
-    .product-card:hover{
-        transform:scale(1.05);
-        box-shadow:0 10px 20px rgba(0,0,0,0.15);
+    .product-card {
+      transition:0.3s;
+      border-radius:12px;
+      overflow:hidden;
     }
 
-    .product-image{
-        height:200px;
-        object-fit:cover;
-        border-top-left-radius:12px;
-        border-top-right-radius:12px;
+    .product-card:hover {
+      transform: translateY(-5px) scale(1.03);
+      box-shadow:0 10px 20px rgba(0,0,0,0.15);
     }
 
-    .product-price{
-        color:#d00000;
-        font-weight:bold;
-        font-size:18px;
+    .product-image {
+      height:200px;
+      object-fit:cover;
     }
 
+    .product-price {
+      color:#d00000;
+      font-weight:bold;
+      font-size:18px;
+    }
+
+    .btn {
+      border-radius:8px;
+      transition:0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-success {
+      background: linear-gradient(45deg, #28a745, #34d058);
+      border: none;
+    }
+
+    .btn-outline-success:hover {
+      background:#28a745;
+      color:white;
+    }
   </style>
-
 </head>
 
 <body>
@@ -44,68 +64,164 @@
 
   <h2 class="mb-4">Danh Sách Sản Phẩm</h2>
 
-  <div class="mb-3">
+  <!-- SEARCH -->
+  <form th:action="@{/products}" method="get" class="mb-3 d-flex">
+    <input type="text" name="keyword" th:value="${keyword}"
+           class="form-control me-2"
+           placeholder="Nhập tên sản phẩm">
+    <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+  </form>
+
+  <!-- SORT -->
+  <form th:action="@{/products}" method="get" class="mb-3">
+    <select name="sort" class="form-select w-auto d-inline"
+            onchange="this.form.submit()">
+      <option value="asc" th:selected="${sort == 'asc'}">Giá tăng dần</option>
+      <option value="desc" th:selected="${sort == 'desc'}">Giá giảm dần</option>
+    </select>
+
+    <input type="hidden" name="keyword" th:value="${keyword}">
+    <input type="hidden" name="categoryId" th:value="${selectedCategory}">
+  </form>
+
+  <!-- CATEGORY -->
+  <form th:action="@{/products}" method="get" class="mb-3">
+    <select name="categoryId"
+            class="form-select w-auto d-inline"
+            onchange="this.form.submit()">
+
+      <option value="" th:selected="${selectedCategory == null}">
+        Tất cả
+      </option>
+
+      <option th:each="cat : ${categories}"
+              th:value="${cat.id}"
+              th:text="${cat.name}"
+              th:selected="${selectedCategory == cat.id}">
+      </option>
+    </select>
+
+    <input type="hidden" name="keyword" th:value="${keyword}">
+    <input type="hidden" name="sort" th:value="${sort}">
+  </form>
+
+  <!-- ADMIN -->
+  <div class="mb-3" sec:authorize="hasRole('ADMIN')">
     <a th:href="@{/products/create}" class="btn btn-success">
-      Thêm Sản Phẩm Mới
+      ➕ Thêm sản phẩm
     </a>
   </div>
 
+  <!-- PRODUCT LIST -->
   <div class="row">
-
     <div class="col-md-3 mb-4"
          th:each="product : ${listproduct}">
 
-      <div class="card product-card h-100 shadow-sm">
+      <div class="card product-card h-100 shadow-sm position-relative">
 
-        <!-- Hình ảnh -->
+        <!-- IMAGE -->
         <img th:if="${product.image != null}"
-             th:src="${product.image.startsWith('http') ? product.image : '/images/' + product.image}"
-             class="card-img-top product-image">
+             th:src="@{/images/{img}(img=${product.image})}"
+             class="card-img-top product-image"
+             th:alt="${product.name}">
 
-        <div class="card-body">
-
-          <!-- Tên sản phẩm -->
+        <!-- BODY -->
+        <div class="card-body text-center">
           <h5 class="card-title"
-              th:text="${product.name}">
-          </h5>
+              th:text="${product.name}"></h5>
 
-          <!-- Giá -->
           <p class="product-price"
              th:text="${#numbers.formatInteger(product.price * 1000, 0, 'POINT')} + ' VNĐ'">
           </p>
 
-          <!-- Danh mục -->
           <p class="text-muted"
              th:text="${product.category != null ? product.category.name : ''}">
           </p>
-
         </div>
 
-        <div class="card-footer text-center bg-white">
+        <!-- FOOTER -->
+        <div class="card-footer bg-white border-0 text-center">
 
-          <a th:href="@{/products/edit/{id}(id=${product.id})}"
-             class="btn btn-warning btn-sm">
-            Sửa
-          </a>
+          <!-- ADMIN -->
+          <div sec:authorize="hasRole('ADMIN')">
+            <a th:href="@{/products/edit/{id}(id=${product.id})}"
+               class="btn btn-outline-warning btn-sm me-1">
+              ✏️ Sửa
+            </a>
 
-          <form th:action="@{/products/delete/{id}(id=${product.id})}"
-                method="post"
-                style="display:inline;">
+            <form th:action="@{/products/delete/{id}(id=${product.id})}"
+                  method="post"
+                  style="display:inline;">
+              <button type="submit"
+                      class="btn btn-outline-danger btn-sm"
+                      onclick="return confirm('Bạn có chắc muốn xóa?')">
+                🗑 Xóa
+              </button>
+            </form>
+          </div>
 
-            <button type="submit"
-                    class="btn btn-danger btn-sm"
-                    onclick="return confirm('Bạn có chắc muốn xóa?')">
-              Xóa
-            </button>
+          <!-- USER -->
+          <div sec:authorize="hasRole('USER')"
+               class="d-flex gap-2 justify-content-center">
 
-          </form>
+            <!-- THÊM GIỎ -->
+            <form th:action="@{/cart/add/{id}(id=${product.id})}"
+                  method="post">
+              <button class="btn btn-outline-success btn-sm">
+                🛒 Thêm
+              </button>
+            </form>
+
+            <!-- MUA NGAY -->
+            <form th:action="@{/cart/add/{id}(id=${product.id})}"
+                  method="post"
+                  onsubmit="setTimeout(() => window.location='/cart', 100)">
+              <button class="btn btn-success btn-sm">
+                ⚡ Mua
+              </button>
+            </form>
+
+          </div>
 
         </div>
 
       </div>
-
     </div>
+  </div>
 
+  <!-- PAGINATION -->
+  <div class="mt-4 text-center">
+    <nav>
+      <ul class="pagination justify-content-center">
+
+        <li class="page-item"
+            th:classappend="${currentPage == 0} ? ' disabled' : ''">
+          <a class="page-link"
+             th:href="@{/products(page=${currentPage-1}, keyword=${keyword}, sort=${sort}, categoryId=${selectedCategory})}">
+            Previous
+          </a>
+        </li>
+
+        <li class="page-item"
+            th:each="i : ${#numbers.sequence(0, totalPages-1)}"
+            th:classappend="${i == currentPage} ? ' active' : ''">
+
+          <a class="page-link"
+             th:href="@{/products(page=${i}, keyword=${keyword}, sort=${sort}, categoryId=${selectedCategory})}"
+             th:text="${i+1}">
+          </a>
+        </li>
+
+        <li class="page-item"
+            th:classappend="${currentPage == totalPages-1} ? ' disabled' : ''">
+          <a class="page-link"
+             th:href="@{/products(page=${currentPage+1}, keyword=${keyword}, sort=${sort}, categoryId=${selectedCategory})}">
+            Next
+          </a>
+        </li>
+
+      </ul>
+    </nav>
   </div>
 
 </div>
